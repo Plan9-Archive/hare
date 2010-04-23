@@ -7,6 +7,8 @@ extern char *hosttype;
 static int IHN = 0; 
 static int IAN = 0; 
 
+<<<<<<< local
+=======
 #ifdef ndef
 /* I hate myself for this */
 void*
@@ -40,6 +42,7 @@ myfree(void *x)
 #define mallocz(x,y) mymallocz(x,y)
 #define free(x) myfree(x)
 #endif 
+>>>>>>> other
 
 enum
 {
@@ -708,6 +711,7 @@ cmdopen (Chan *c, int omode)
 		/* in case of clone, check if it is locked */
 		qlock (&cmd.l);
 		if (waserror ()){
+			if(vflag) print("bye bye clone\n");
 			qunlock (&cmd.l);
 			nexterror ();
 		}
@@ -734,6 +738,7 @@ cmdopen (Chan *c, int omode)
 		cv = cmd.conv[CONV (c->qid)];
 		qlock (&cv->l);
 		if (waserror ()){
+			if(vflag) print("bye byte ctl\n");
 			qunlock (&cv->l);
 			qunlock (&cmd.l);
 			nexterror ();
@@ -2361,16 +2366,23 @@ dolocalexecution (Conv *c, Cmdbuf *cb)
 
 	qlock(&c->l);
 	if(waserror()){
+		if(vflag)print("so much for local execution\n");
 		qunlock(&c->l);
 		nexterror();
 	}
-	if(c->child != nil || c->cmd != nil)
+	if(c->child != nil || c->cmd != nil){
+		if(vflag)print("I like using things twice c->child %p c->cmd %p\n", c->child, c->cmd);
 		error(Einuse);
+	}
 	for(i = 0; i < nelem(c->fd); i++)
-		if(c->fd[i] != -1)
+		if(c->fd[i] != -1){
+			if(vflag)print("not the channel!\n");
 			error(Einuse);
-	if(cb->nf < 1)
+		}
+	if(cb->nf < 1){
+		if(vflag)print("whoops I'm too small\n");
 		error(Etoosmall);
+	}
 	kproc("cmdproc", cmdproc, c, 0); /* cmdproc held back until unlock below */
 	if (c->cmd != nil) {
 		free(c->cmd);
@@ -2380,7 +2392,7 @@ dolocalexecution (Conv *c, Cmdbuf *cb)
 	c->state = "Execute";
 	poperror();
 	qunlock(&c->l);
-	while(waserror()) ;
+	while(waserror()) if(vflag) print("I hate waserror");
 	Sleep(&c->startr, cmdstarted, c);
 	poperror();
 	if(c->error)
@@ -2445,6 +2457,7 @@ cmdwrite (Chan *ch, void *a, long n, vlong offset)
 		s[n]=0;
 		cb = parsecmd (s, n);
 		if (waserror ()){
+			if(vflag) print("screw you cmd buffer!\n");
 			free (cb);
 			nexterror ();
 		}
@@ -2546,6 +2559,7 @@ cmdwrite (Chan *ch, void *a, long n, vlong offset)
 				if (vflag) print ("executing kill locally\n");
 				qlock(&c->l);
 				if(waserror()){
+					if(vflag) print("we aren't good killers\n");
 					qunlock(&c->l);
 					nexterror();
 				}
@@ -2675,6 +2689,7 @@ cmdwstat (Chan *c, uchar *dp, int n)
 		if (d == nil)
 			error (Enomem);
 		if (waserror ()){
+			if(vflag) print("error has errors!\n");
 			free (d);
 			nexterror ();
 		}
@@ -2787,8 +2802,10 @@ cmdproc(void *a)
 	Wakeup(&c->startr);
 	if(vflag)
 		print("started\n");
-	while(waserror())
+	while(waserror()){
+		if(vflag) print("killin all the city of New Orleans, I'll have gone 5000 miles for the day is done\n");
 		oscmdkill(t);
+	}
 	osenter();
 	n = oscmdwait(t, status, sizeof(status));
 	osleave();

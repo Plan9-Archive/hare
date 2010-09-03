@@ -8,6 +8,7 @@ Syscall cnkwritev;
 Syscall cnksocketcall;
 Syscall cnkgeteuid;
 Syscall cnkmmap;
+Syscall cnkmunmap;
 Syscall cnkexit;
 Syscall cnksettid;
 Syscall sigaction;
@@ -27,6 +28,7 @@ Syscall cnkcga;
 Syscall getrusage;
 
 extern Syscall sys_write;
+extern Syscall syspwrite;
 extern Syscall sys_read;
 extern Syscall sysopen;
 extern Syscall syspread;
@@ -142,7 +144,7 @@ struct syscall cnksystab[] = {
 	[88]	{"STUBreboot", returnok, 1, {.i = 0}},
 	[89]	{"STUBreaddir", returnok, 1, {.i = 0}},
 
-	[91]	{"STUBmunmap", returnok, 1, {.i = 0}},
+	[91]	{"cnkmunmap", cnkmunmap, 2, {.i = -1}},
 	[92]	{"STUBtruncate", returnok, 1, {.i = 0}},
 	[93]	{"STUBftruncate", returnok, 1, {.i = 0}},
 	[94]	{"STUBfchmod", returnok, 1, {.i = 0}},
@@ -229,8 +231,8 @@ struct syscall cnksystab[] = {
 	[176]	{"STUBrt_sigtimedwait", returnok, 1, {.i = 0}},
 	[177]	{"STUBrt_sigqueueinfo", returnok, 1, {.i = 0}},
 	[178]	{"STUBrt_sigsuspend", returnok, 1, {.i = 0}},
-	[179]	{"pread64", syspread, 5, {.i = 0}},
-	[180]	{"STUBpwrite64", returnok, 1, {.i = 0}},
+	[179]	{"pread64", syspread, 5, {.i = -1}},
+	[180]	{"pwrite64", syspwrite, 5, {.i = -1}},
 	[181]	{"STUBchown", returnok, 1, {.i = 0}},
 	[182]	{"STUBgetcwd", returnok, 1, {.i = 0}},
 	[183]	{"STUBcapget", returnok, 1, {.i = 0}},

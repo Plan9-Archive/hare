@@ -199,9 +199,9 @@ void torusinit(int *pmyproc, const int numprocs)
 
 	*pmyproc = (z << (lx + ly)) + (y << lx) + x;
 
-	print( "%d/%d %d/%d %d/%d\n", x, xsize, y, ysize, z, zsize);
-	print( "numprocs %d \n", numprocs);
-	print("%d/%d %d/%d %d/%d\n", lx, xbits, ly, ybits, lz, zbits);
+	//print( "%d/%d %d/%d %d/%d\n", x, xsize, y, ysize, z, zsize);
+	//print( "numprocs %d \n", numprocs);
+	//print("%d/%d %d/%d %d/%d\n", lx, xbits, ly, ybits, lz, zbits);
 
 	/* make some tables. Mapping is done as it is to maximally distributed broadcast traffic */
 	xyz = calloc(numprocs, sizeof(*xyz));
@@ -280,7 +280,7 @@ xyztorank(int x, int y, int z)
 /* failure is not an option */
 /* note this is pretty awful ... copy to here, then copy in kernel!  */
 void
-torussend(void *buf, int length, int x, int y, int z, int deposit, void *tag, int taglen)
+torussend(void *buf, int length, int x, int y, int z, int hint, void *tag, int taglen)
 {
 	int n;
 	/* OMG! We're gonna copy AGAIN. Mantra: right then fast. */
@@ -296,8 +296,8 @@ torussend(void *buf, int length, int x, int y, int z, int deposit, void *tag, in
 	tpkt->dst[X] = x;
 	tpkt->dst[Y] = y;
 	tpkt->dst[Z] = z;
-	if (deposit) 
-		tpkt->hint |= Dp;
+	if (hint) 
+		tpkt->hint = hint; //|= Dp;
 	
 	want = length + taglen + sizeof(*tpkt);
 	n = pwrite(torusfd, tpkt, want, 0);

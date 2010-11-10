@@ -1,0 +1,11 @@
+#!/bin/rc
+#ls -l
+date
+#echo debug > /dev/torusctl
+#syscalltrace -c /bin/date
+#syscalltrace -c './machcnk machcnk ./rompihello'
+MALLOC_MMAP_MAX_=0
+./q.machcnk  ./msgrate  64 msgrate -n 4  -m 16  -i 512
+# -i 100 -m 16
+#echo "WE ARE ALL DONE! Is that not wonderful"
+

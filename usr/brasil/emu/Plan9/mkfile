@@ -1,0 +1,55 @@
+SYSTARG=Plan9
+OBJTYPE=$objtype
+<../../mkconfig
+
+#Configurable parameters
+
+CONF=brasil #default configuration
+CONFLIST=brasil
+CLEANCONFLIST=
+
+INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
+
+#end configurable parameters
+
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+
+<| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $PORT, $LIBS
+
+OBJ=\
+	asm-$OBJTYPE.$O\
+	os.$O\
+	$CONF.root.$O\
+	$DEVS\
+	$PORT\
+
+
+HFILES=\
+
+CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
+KERNDATE=`{$NDATE}
+
+default:V:	$O.$CONF
+
+<../port/portmkfile
+
+$CONF.acid:	$OBJ $CONF.c $CONF.root.h $LIBFILES
+	$CC $CFLAGS -DKERNDATE'='$KERNDATE -a $CONF.c >brasil.acid
+	for(i in $OBJ){
+		stem=`{echo $i | sed 's/\.[0-9a-z]$//'}
+		echo $i
+		if(test -f $stem.c)
+			$CC $CFLAGS -DKERNDATE'='$KERNDATE -a $stem.c >>brasil.acid
+	}
+	echo 'print("/sys/lib/acid/brasil");' >>brasil.acid
+
+$O.$CONF:	$OBJ $CONF.c $CONF.root.h $LIBFILES
+	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
+	$LD  -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
+
+safeinstall:V:	$O.$CONF
+	mv $INSTALLDIR/$CONF $INSTALLDIR/$CONF.`{date -n}
+	cp $O.$CONF $INSTALLDIR/$CONF
+
+install:V: $O.$CONF
+	cp $O.$CONF $INSTALLDIR/$CONF

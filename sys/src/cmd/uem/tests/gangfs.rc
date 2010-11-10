@@ -1,0 +1,178 @@
+#!/bin/rc
+# 
+# Gangfs Regression
+#
+
+echo '== Gangfs Regression =='
+
+#
+# Parameters
+#
+GANGLOG=gangfs.log
+EXECLOG=execfs.log
+MPIPELOG=mpipefs.log
+TESTDIR=.test
+
+#
+# Cleanup Previous Instances
+#
+fn cleanup {
+	echo Cleaning up previous runs.
+	rm -f /srv/mpipe
+	unmount /n/test > /dev/null >[2] /dev/null
+	unmount /proc > /dev/null >[2] /dev/null
+	bind '#p' /proc
+	kill mpipfs | rc
+	kill execfs | rc
+	kill gangfs | rc
+}
+
+#
+# Startup execfs 
+#
+fn startup {
+	echo Starting execfs.
+	if(~ $#* 0) {
+		execfs >[2] $EXECLOG 
+	}
+	if not {
+		execfs -D -v $1 >[2] $EXECLOG  	# CHATTY
+	}
+	echo Starting gangfs.
+	if(~ $#* 0) {
+		gangfs >[2] $GANGLOG 
+	}
+	if not {
+		gangfs -D -v $1 >[2] $GANGLOG  	# CHATTY
+	}
+	echo Starting mpipefs....
+	if(~ $#* 0) {
+		mpipefs >[2] $MPIPELOG 
+	}
+	if not {
+		mpipefs -D -v $1 >[2] $MPIPELOG 	# CHATTY
+	}
+}
+
+#
+# Setup a testdirp
+#
+fn testdir {
+	mkdir -p $TESTDIR
+}
+
+fn myexec {
+	mypid=`{cat}
+	echo res 5 >>[2] error.log
+	echo exec /bin/cat $TESTDIR/test >>[2] error.log
+	cat /proc/g$mypid/stdout > $TESTDIR/test1 >>[2] error.log
+}
+
+fn myexec2 {
+	mypid=`{cat}
+	echo res 5 >>[2] error.log
+	echo exec /bin/cat >>[2] error.log
+	cat $TESTDIR/test > /proc/g$mypid/stdin >>[2] error.log
+	cat /proc/g$mypid/stdout > $TESTDIR/test1 >>[2] error.log
+}
+
+fn myexec3 {
+	mypid=`{cat}
+	echo enum >>[2] error.log
+	echo res 5 >>[2] error.log
+	echo exec /bin/cat >>[2] error.log
+	read -n 5 $TESTDIR/test > /proc/g$mypid/stdin >>[2] error.log &
+	cat /proc/g$mypid/stdout > $TESTDIR/test1 >>[2] error.log
+}
+
+fn basic {
+	echo -n Basic Test....
+
+	# initialize files
+	echo Hello Squidboy > $TESTDIR/test
+	echo > $TESTDIR/test1
+
+	# execute test
+	myexec <>/proc/gclone >[1=0]
+
+	# verify results (yes, I'm lazy)
+	cat $TESTDIR/test > $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	if(! cmp -s $TESTDIR/test2 $TESTDIR/test1) {
+		echo FAILED!
+		exit 'stdout: test failed'
+	}
+
+	echo Success!
+	# cleanup
+	rm -rf $TESTDIR/*
+}
+
+fn stdin {
+	echo -n STDIN Test....
+
+	# initialize files
+	echo Hello Squidboy > $TESTDIR/test
+	echo > $TESTDIR/test1
+
+	# execute test
+	myexec2 <>/proc/gclone >[1=0]
+
+	# verify results (yes, I'm lazy)
+	cat $TESTDIR/test > $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	cat $TESTDIR/test >> $TESTDIR/test2
+	if(! cmp -s $TESTDIR/test2 $TESTDIR/test1) {
+		echo FAILED!
+		exit 'stdout: test failed'
+	}
+
+	echo Success!
+	# cleanup
+	rm -rf $TESTDIR/*
+}
+
+fn enum {
+	echo -n Enumerated STDIN Test....
+
+	# initialize files
+	echo one > $TESTDIR/test
+	echo two >> $TESTDIR/test
+	echo three >> $TESTDIR/test
+	echo four >> $TESTDIR/test
+	echo five >> $TESTDIR/test
+
+	echo > $TESTDIR/test1
+
+	# execute test
+	myexec3 <>/proc/gclone >[1=0]
+
+	# verify results 
+	if(! cmp -s $TESTDIR/test $TESTDIR/test1) {
+		echo FAILED!
+		exit 'stdout: test failed'
+	}
+
+	echo Success!
+	# cleanup
+	rm -rf $TESTDIR/*
+}
+
+# Setup
+cleanup
+startup $1
+testdir
+
+# Tests
+basic
+stdin
+enum
+
+# Cleanup
+rm -rf $TESTDIR
+cleanup

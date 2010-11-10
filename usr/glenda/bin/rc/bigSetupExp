@@ -1,0 +1,36 @@
+#!/bin/rc -x
+# don't add comments saying what you're doing. if a user needs to find out what's going on the proper way is to add a -x to rc
+
+cleanbra >[2=1] >/dev/null
+slay brasil|rc
+coords=`{mktopo  -d 9 1 2 4 >[2=1]}
+echo coords $coords 
+mount -nc /srv/ionode0 /n/csrv
+
+@{
+x=`{cat}
+echo session id is $x
+echo res 8  > /n/csrv/local/$x/ctl
+cat /n/csrv/local/$x/topology
+}<>/n/csrv/local/clone
+
+# now going for tests of Noah
+
+newxlog
+window -scroll -r $coords tail -f /tmp/xcpu.log
+
+echo 'res 8
+exec 0 fdecho test
+exec filt xirf 1 5 7 4 6
+exec filt self 2 7 4 6 5
+exec 3 mecat
+exec 4 mecat
+exec 5 mecat
+exec 6 mecat
+exec 7 mecat
+splice 0 2
+splice 1 3
+end 3 ' | pxcpu
+
+unmount /n/csrv
+

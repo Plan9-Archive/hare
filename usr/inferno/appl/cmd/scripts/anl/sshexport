@@ -1,0 +1,10 @@
+#!/dis/sh
+load std
+or {ftest -e /net/cs} {ndb/cs}
+bind -c '#U*' /n/local
+bind -a '#C' /
+bind  '#|' /tmp/pipes
+cat /tmp/pipes/data > /dev/hoststdout&
+cat /dev/hoststdin > /tmp/pipes/data&
+export / <>/tmp/pipes/data1 >[2] /dev/null
+echo halt > /dev/sysctl

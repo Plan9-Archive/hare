@@ -1,0 +1,73 @@
+</$objtype/mkfile
+
+TARG = \
+	csrv\
+	mpipefs\
+	execfs\
+	execcmd\
+	gangfs\
+
+HFILES = debug.h
+BIN = /$objtype/bin
+
+DIRS = tests
+
+</sys/src/cmd/mkmany
+
+dist:V: nuke dirsnuke
+	rm *.log
+
+dirs:V:
+	p=`{pwd}
+	for(i in $DIRS) @{
+		cd $i
+		mk $MKFLAGS all
+	}
+	cd $p
+
+dirsinstall:V:
+	p=`{pwd}
+	for(i in $DIRS) @{
+		cd $i
+		mk $MKFLAGS install
+	}
+	cd $p
+
+dirsclean:V:
+	p=`{pwd}
+	for(i in $DIRS) @{
+		cd $i
+		mk $MKFLAGS clean
+	}
+	cd $p
+
+dirsnuke:V:
+	p=`{pwd}
+	for(i in $DIRS) @{
+		cd $i
+		mk $MKFLAGS nuke
+	}
+	cd $p
+
+regress:V: install dirsinstall
+	tests/mpipefs.rc
+	tests/execfs.rc
+	tests/gangfs.rc
+
+debug:V: install dirsinstall
+	tests/mpipefs.rc 9
+	tests/execfs.rc 9
+	tests/gangfs.rc 9
+
+tidy:V:
+	unmount /proc
+	bind '#p' /proc
+	rm -f /srv/mpipe
+	kill gangfs | rc
+	kill execfs | rc
+	kill mpipefs | rc
+	broke | rc
+	rm -f *.log
+	rm -f *.acid
+
+acid:V: execfs.acid execcmd.acid mpipefs.acid gangfs.acid

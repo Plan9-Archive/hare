@@ -1,0 +1,21 @@
+#!/bin/rc
+
+# fire up a cache
+if(~ $cpunode '0') {
+	ramcfs -a $fsaddr -n /n/cache
+	bind /n/cache/n/local /n/frontend
+	bind -c /n/frontend^$fshome /n/home
+	bind -c /n/frontend^$plan9root /n/root
+}
+
+# bind our shit for now
+bind -a /n/root /
+bind -b /n/root/power/bin /bin
+bind -b /n/root/rc/bin /bin
+bind -a /n/root/sys /sys
+
+# start up the UEM stuff
+csrv
+mpipefs
+execfs
+gangfs

@@ -1,0 +1,121 @@
+#!/bin/rc
+# 
+# Execfs Regression
+#
+
+echo '== Execfs Regression =='
+
+#
+# Parameters
+#
+TESTDIR=.test
+EXECLOG=execfs.log
+MPIPELOG=mpipefs.log
+
+#
+# Cleanup Previous Instances
+#
+fn cleanup {
+	echo Cleaning up previous runs.
+	unmount /n/test > /dev/null >[2] /dev/null
+	unmount /proc > /dev/null >[2] /dev/null
+	bind '#p' /proc
+	rm -f /srv/mpipe
+}
+
+#
+# Startup execfs 
+#
+fn startup {
+	echo Starting mpipefs....
+	if(~ $#* 0) {
+		mpipefs >[2] $MPIPELOG 
+	}
+	if not {
+		mpipefs -D -v $1 >[2] $MPIPELOG 	# CHATTY
+	}
+	echo Starting execfs.
+	if(~ $#* 0) {
+		execfs >[2] $EXECLOG 
+	}
+	if not {
+		execfs -D -v $1 >[2] $EXECLOG  	# CHATTY
+	}
+}
+
+#
+# Setup a test directory
+#
+fn testdir {
+	mkdir -p $TESTDIR
+}
+
+fn myexecstdin {
+	mypid=`{cat}
+
+	echo -n exec /bin/cat >>[2] execfs.log >>[2] error.log
+	cat $TESTDIR/test > /proc/$mypid/stdin >>[2] error.log
+	cat /proc/$mypid/stdout > $TESTDIR/test1 >>[2] error.log
+}
+
+fn myexecstdout {
+	mypid=`{cat}
+
+	echo -n exec /bin/cat $TESTDIR/test >>[2] error.log
+	cat /proc/$mypid/stdout > $TESTDIR/test1 >>[2] error.log
+}
+
+fn stdout {
+	echo -n Basic Test....
+
+	# initialize files
+	echo Hello Squidboy > $TESTDIR/test
+	echo > $TESTDIR/test1
+
+	# execute test
+	myexecstdout <>/proc/clone >[1=0]
+
+	# verify results
+	if(! cmp -s $TESTDIR/test $TESTDIR/test1) {
+		echo FAILED!
+		exit 'stdout: test failed'
+	}
+
+	echo Success!
+	# cleanup
+	rm -rf $TESTDIR/*
+}
+
+fn stdin {
+	echo -n Stdin Test....
+
+	# initialize files
+	echo Hello Squidboy > $TESTDIR/test
+	echo > $TESTDIR/test1
+
+	# execute test
+	myexecstdin <>/proc/clone >[1=0]
+
+	# verify results
+	if(! cmp -s $TESTDIR/test $TESTDIR/test1) {
+		echo FAILED!
+		exit 'stdout: test failed'
+	}
+
+	echo Success!
+	# cleanup
+	rm -rf $TESTDIR/*
+}
+
+# Setup
+cleanup
+startup $1
+testdir
+
+# Tests
+stdout
+stdin	#failing
+
+# Cleanup
+rm -rf $TESTDIR
+cleanup

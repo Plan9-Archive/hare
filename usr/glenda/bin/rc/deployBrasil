@@ -1,0 +1,11 @@
+#!/bin/rc
+
+# in plan9 it's the user's responsibility to bind brasil into their environment. 
+# if you can't find your brasil executable, you should add a bind(1)
+# in your $home/lib/profile that puts it in the right place
+
+@{
+echo node $1 on port $2
+rfork
+brasil csrvlite -D -M $1 -h tcp!*!$2
+}

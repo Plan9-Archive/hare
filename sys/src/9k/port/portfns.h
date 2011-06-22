@@ -106,6 +106,7 @@ void		fdclose(int, int);
 Chan*		fdtochan(int, int, int, int);
 int		findmount(Chan**, Mhead**, int, uint, Qid);
 int		fixfault(Segment*, uintptr, int, int);
+void		fmtinit(void);
 void		forceclosefgrp(void);
 void		free(void*);
 void		freeb(Block*);

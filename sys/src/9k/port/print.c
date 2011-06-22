@@ -34,3 +34,10 @@ mregfmt(Fmt* f)
 		return fmtprint(f, "%#16.16llux", (uvlong)mreg);
 	return fmtprint(f, "%#8.8ux", (uint)mreg);
 }
+
+void
+fmtinit(void)
+{
+	quotefmtinstall();
+	fmtinstall('m', mregfmt);
+}

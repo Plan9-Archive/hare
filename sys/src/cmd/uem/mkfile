@@ -9,6 +9,7 @@ TARG = \
 	exec2fs\
 	execcmd\
 	gangfs\
+	gang2fs\
 	poke\
 
 HFILES = debug.h

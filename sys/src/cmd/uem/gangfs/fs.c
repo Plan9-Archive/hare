@@ -1,7 +1,7 @@
 /*
-	gangfs - aggregated execution management
+	gang2fs - aggregated execution management (take 2)
 
-	Copyright (C) 2010, IBM Corporation, 
+	Copyright (C) 2011, IBM Corporation, 
  		Eric Van Hensbergen (bergevan@us.ibm.com)
 
 	Description:
@@ -12,13 +12,6 @@
 
 	Based in part on Pravin Shinde's devtask.c
 
-	TODO:
-		* per stdio aggregation mode
-		* non-aggregation mode for stdio(s)
-		* push helper: (launch local stage1 and stage3 with fanout stage2)
-		* session level status file
-		* MAYBE: aggregated status via multipipes
-		* nextaggregated wait via multipipe barrier (todo in multipipe)
 */
 
 #include <u.h>
@@ -30,12 +23,11 @@
 #include <mp.h>
 #include <libsec.h>
 #include <stdio.h>
-#include "debug.h"
+#include "../debug.h"
 
 int remote_override = 0;
 int remote = 0;
 int ntask_override = 0;
-
 
 static char defaultpath[] =	"/proc";
 static char defaultsrvpath[] =	"gangfs";

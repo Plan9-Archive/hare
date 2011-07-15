@@ -233,52 +233,6 @@ newgang(void)
 	return mygang;
 }
 
-static Gang *
-findgang(int index)
-{
-	Gang *current = nil;
-
-	rlock(&glock);
-	if(glist == nil) {
-		goto out;
-	} else {
-		for(current=glist; current != nil; current = current->next) {
-			if((current->index == index)&&(current->status != GANG_CLOSED)) {
-				// gangrefinc(current, "findgang");
-				goto out;
-			}
-		}
-	}
-out:
-	runlock(&glock);
-	return current;
-}
-
-
-
-static Gang *
-findgangnum(int which)
-{
-	Gang *current = nil;
-	rlock(&glock);
-	if(glist == nil) {
-		goto out;
-	} else {
-		int count = 0;
-		for(current=glist; current != nil; current = current->next) {
-			if(current->status == GANG_CLOSED)
-				continue;
-			if(count == which) {
-				// gangrefinc(current, "findgangnum");
-				goto out;
-			}
-			count++;
-		}
-	}
-out:
-	runlock(&glock);
-	return current;
-}
 
 
 static void
